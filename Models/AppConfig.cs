@@ -40,41 +40,17 @@ public sealed class CommandFeature
 public sealed class ConfigStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
-    private string ExecutableDirectoryPath { get; } = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
-    private string LocalAppDataPath { get; } = System.IO.Path.Combine(
+    private string LegacyExecutablePath { get; } = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
+    public string Path { get; } = System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "config.json");
-    public string Path { get; } = SelectConfigPath();
-
-    private static string SelectConfigPath()
-    {
-        var executableDirectory = AppContext.BaseDirectory;
-        return CanWriteToDirectory(executableDirectory)
-            ? System.IO.Path.Combine(executableDirectory, "config.json")
-            : System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "config.json");
-    }
-
-    private static bool CanWriteToDirectory(string directory)
-    {
-        var probePath = System.IO.Path.Combine(directory, $".mqctrl-write-test-{Guid.NewGuid():N}.tmp");
-        try
-        {
-            using var probe = new FileStream(probePath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose);
-            return true;
-        }
-        catch (UnauthorizedAccessException) { return false; }
-        catch (IOException) { return false; }
-    }
 
     public AppConfig Load()
     {
-        var alternatePath = string.Equals(Path, ExecutableDirectoryPath, StringComparison.OrdinalIgnoreCase)
-            ? LocalAppDataPath
-            : ExecutableDirectoryPath;
-        if (!File.Exists(Path) && File.Exists(alternatePath) &&
-            !string.Equals(System.IO.Path.GetFullPath(Path), System.IO.Path.GetFullPath(alternatePath), StringComparison.OrdinalIgnoreCase))
+        if (!File.Exists(Path) && File.Exists(LegacyExecutablePath) &&
+            !string.Equals(System.IO.Path.GetFullPath(Path), System.IO.Path.GetFullPath(LegacyExecutablePath), StringComparison.OrdinalIgnoreCase))
         {
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
-            File.Copy(alternatePath, Path);
+            File.Copy(LegacyExecutablePath, Path);
         }
 
         if (!File.Exists(Path))

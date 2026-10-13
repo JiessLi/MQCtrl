@@ -1,5 +1,6 @@
 bin/
 obj/
 publish/
+Releases/
 *.user
 config.json

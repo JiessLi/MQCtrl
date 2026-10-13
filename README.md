@@ -10,7 +10,8 @@ MQCtrl 是一个运行在 Windows 系统托盘中的 MQTT 指令接收器，可�
 - 指令列表增删改、单条启停、精确主题匹配和忽略消息大小写的值匹配。
 - 关机、重启、锁屏、自定义脚本四种默认指令；关机/重启立即执行，支持 PowerShell、BAT、CMD 脚本。
 - 通知区域单击打开主界面，右键菜单含“打开界面”和“退出”；关闭窗口时最小化到托盘。
-- 开机自启动开关；配置优先保存在程序同目录；目录不可写时自动回退到 `%LocalAppData%\MQCtrl\config.json`。
+- 开机自启动开关；配置固定保存在 `%LocalAppData%\MQCtrl\config.json`，避免应用更新覆盖；首次启动时会从程序同目录复制旧配置（保留原文件）。
+- 通过 GitHub Releases 检查并下载更新；更新包会在下次启动时自动安装，不会为了升级强制中断 MQTT 监听。
 - 单实例限制，避免相同客户端 ID 的多个进程互相挤下线。
 
 首次启动会生成示例指令，但默认全部关闭。填入巴法云用户私钥作为客户端 ID 后，再启用需要的指令。开机自启动使用 `-S` 参数，启动后只驻留系统托盘，不显示主窗口；也兼容 `-SILENT`，参数不区分大小写。
@@ -25,7 +26,13 @@ dotnet build
 dotnet run
 ```
 
-也可以运行 `dotnet build -c Release` 生成 Release 版本。运行机器需要安装 .NET 10 Desktop Runtime。程序启动时会检测程序目录能否写入：可写时使用程序同目录的 `config.json`，不可写时使用 `%LocalAppData%\MQCtrl\config.json`。如果所选位置没有配置，但另一个位置存在配置，程序会复制过去且保留源文件。MQTT 凭据保存在该 JSON 中，当前版本未加密，请妥善保护该文件。
+也可以运行 `dotnet build -c Release` 生成 Release 版本。配置统一保存在 `%LocalAppData%\MQCtrl\config.json`，首次启动时会从当前程序目录迁移旧配置（复制，不删除）。MQTT 凭据保存在该 JSON 中，当前版本未加密，请妥善保护该文件。
+
+## 安装与更新
+
+从 [GitHub Releases](https://github.com/JiessLi/MQCtrl/releases) 下载 `MQCtrl.APP-win-Setup.exe` 安装。安装器会在缺少运行环境时引导安装 .NET 10 Desktop Runtime。程序自动检查公开 GitHub Releases 并下载更新；已下载版本在下次启动时安装，以免升级时中断正在进行的 MQTT 监听。
+
+发布新版本时推送 `v` 开头的版本标签（例如 `v1.0.1`），GitHub Actions 会构建安装包并发布 Release。包 ID 固定为 `MQCtrl.APP`。
 
 ## 巴法云参数
 

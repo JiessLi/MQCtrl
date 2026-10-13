@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using Velopack;
 
 namespace MQCtrl;
 
@@ -10,6 +11,15 @@ namespace MQCtrl;
 public partial class App : System.Windows.Application
 {
     private System.Threading.Mutex? _singleInstance;
+
+    [STAThread]
+    public static void Main(string[] args)
+    {
+        VelopackApp.Build().Run();
+        var app = new App();
+        app.InitializeComponent();
+        app.Run();
+    }
 
     protected override void OnStartup(StartupEventArgs e)
     {

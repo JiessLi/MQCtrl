@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Get release version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Tag '$env:RELEASE_TAG' must use semantic versioning, for example v1.0.0."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Publish app
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet publish MQCtrl.csproj -c Release -r win-x64 --self-contained false -p:Version=$env:RELEASE_VERSION -o publish
+
+      - name: Install Velopack CLI
+        run: dotnet tool install --global vpk --version 1.2.161
+
+      - name: Download previous release metadata
+        run: vpk download github --repoUrl https://github.com/${{ github.repository }} --channel win
+
+      - name: Package installer
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: vpk pack --packId MQCtrl.APP --packVersion $env:RELEASE_VERSION --packDir publish --mainExe MQCtrl.exe --packTitle MQCtrl --releaseNotes RELEASE_NOTES.md --runtime win-x64 --framework net10.0-x64-desktop --outputDir Releases
+
+      - name: Publish GitHub Release
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "MQCtrl $env:RELEASE_VERSION" --tag $env:RELEASE_TAG --outputDir Releases

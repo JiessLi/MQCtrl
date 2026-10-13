@@ -20,6 +20,8 @@ public partial class MainWindow : Window
 {
     private readonly ConfigStore _store = new();
     private readonly MqttConnectionService _mqtt = new();
+    private readonly UpdateService _updates = new();
+    private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(12) };
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly System.Drawing.Icon _trayIconImage;
     private AppConfig _config;
@@ -65,10 +67,14 @@ public partial class MainWindow : Window
         _mqtt.StatusChanged += status => Dispatcher.BeginInvoke(() => SetConnectionStatus(status));
         _mqtt.Log += text => Dispatcher.BeginInvoke(() => AddLog("MQTT", text, "info"));
         _mqtt.MessageReceived += message => Dispatcher.BeginInvoke(async () => await HandleMessageAsync(message));
+        _updates.Log += (title, detail) => Dispatcher.BeginInvoke(() => AddLog(title, detail, "muted"));
+        _updateTimer.Tick += async (_, _) => await _updates.CheckAndDownloadAsync();
+        _updateTimer.Start();
         Microsoft.Win32.SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
         ApplySystemTheme();
         _initialized = true;
         RefreshMqtt();
+        _ = _updates.CheckAndDownloadAsync();
         AddLog("MQCtrl", $"配置文件：{_store.Path}", "info");
         if (string.IsNullOrWhiteSpace(_config.Mqtt.ClientId))
             AddLog("需要配置 MQTT", "点击右上角齿轮填写巴法云客户端 ID（用户私钥）", "muted");

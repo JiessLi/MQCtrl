@@ -8,9 +8,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>MQCtrl</AssemblyName>
     <RootNamespace>MQCtrl</RootNamespace>
+    <Version>1.0.0</Version>
+    <StartupObject>MQCtrl.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
   <ItemGroup>
     <None Update="config.example.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
