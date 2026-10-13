@@ -8,7 +8,7 @@ namespace MQCtrl.Models;
 public sealed class AppConfig
 {
     public MqttSettings Mqtt { get; set; } = new();
-    public bool StartWithWindows { get; set; }
+    public bool StartWithWindows { get; set; } = true;
     public List<CommandFeature> Features { get; set; } = [];
 }
 

@@ -8,7 +8,7 @@
     "Password": "",
     "UseTls": false
   },
-  "StartWithWindows": false,
+  "StartWithWindows": true,
   "Features": [
     {
       "Name": "关机",
