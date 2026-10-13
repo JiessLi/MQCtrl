@@ -1,0 +1,46 @@
+{
+  "Mqtt": {
+    "Platform": "Bemfa",
+    "Host": "bemfa.com",
+    "Port": 9501,
+    "ClientId": "替换为巴法云用户私钥",
+    "Username": "",
+    "Password": "",
+    "UseTls": false
+  },
+  "StartWithWindows": false,
+  "Features": [
+    {
+      "Name": "关机",
+      "Topic": "pc/shutdown",
+      "MatchValue": "on",
+      "Action": "shutdown",
+      "ScriptPath": "",
+      "Enabled": false
+    },
+    {
+      "Name": "重启",
+      "Topic": "pc/restart",
+      "MatchValue": "on",
+      "Action": "restart",
+      "ScriptPath": "",
+      "Enabled": false
+    },
+    {
+      "Name": "锁屏",
+      "Topic": "pc/lock",
+      "MatchValue": "on",
+      "Action": "lock",
+      "ScriptPath": "",
+      "Enabled": false
+    },
+    {
+      "Name": "自定义",
+      "Topic": "pc/backup",
+      "MatchValue": "on",
+      "Action": "script",
+      "ScriptPath": "",
+      "Enabled": false
+    }
+  ]
+}
