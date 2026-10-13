@@ -52,4 +52,5 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "MQCtrl $env:RELEASE_VERSION" --tag $env:RELEASE_TAG --outputDir Releases
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: vpk upload github --repoUrl https://github.com/${{ github.repository }} --token $env:GITHUB_TOKEN --publish --releaseName "MQCtrl $env:RELEASE_VERSION" --tag $env:RELEASE_TAG --outputDir Releases
