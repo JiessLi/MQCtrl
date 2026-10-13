@@ -40,18 +40,64 @@ public sealed class CommandFeature
 public sealed class ConfigStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
-    private string LegacyExecutablePath { get; } = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
-    public string Path { get; } = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "config.json");
+    private readonly string _executableConfigPath;
+    private readonly string _localConfigPath;
+
+    public string Path { get; }
+
+    public ConfigStore()
+    {
+        _executableConfigPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
+        _localConfigPath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "config.json");
+
+        Path = CanWriteConfigLocation(_executableConfigPath)
+            ? _executableConfigPath
+            : _localConfigPath;
+    }
+
+    private static bool CanWriteConfigLocation(string configPath)
+    {
+        var directory = System.IO.Path.GetDirectoryName(configPath);
+        if (string.IsNullOrWhiteSpace(directory)) return false;
+
+        try
+        {
+            Directory.CreateDirectory(directory);
+            if (File.Exists(configPath))
+            {
+                using var stream = new FileStream(configPath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+            }
+            else
+            {
+                var probePath = System.IO.Path.Combine(directory, $".mqctrl-write-test-{Guid.NewGuid():N}.tmp");
+                using var stream = new FileStream(probePath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose);
+            }
+
+            return true;
+        }
+        catch (UnauthorizedAccessException) { return false; }
+        catch (IOException) { return false; }
+        catch (System.Security.SecurityException) { return false; }
+    }
+
+    private void ImportExistingConfigIfNeeded()
+    {
+        if (File.Exists(Path)) return;
+
+        var sourcePath = string.Equals(Path, _executableConfigPath, StringComparison.OrdinalIgnoreCase)
+            ? _localConfigPath
+            : _executableConfigPath;
+        if (!File.Exists(sourcePath)) return;
+
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+        try { File.Copy(sourcePath, Path, overwrite: false); }
+        catch (IOException) when (File.Exists(Path)) { }
+    }
 
     public AppConfig Load()
     {
-        if (!File.Exists(Path) && File.Exists(LegacyExecutablePath) &&
-            !string.Equals(System.IO.Path.GetFullPath(Path), System.IO.Path.GetFullPath(LegacyExecutablePath), StringComparison.OrdinalIgnoreCase))
-        {
-            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
-            File.Copy(LegacyExecutablePath, Path);
-        }
+        ImportExistingConfigIfNeeded();
 
         if (!File.Exists(Path))
         {

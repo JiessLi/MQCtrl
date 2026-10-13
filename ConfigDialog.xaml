@@ -44,7 +44,7 @@
                     <TextBlock Grid.Row="5" Text="密码（可选）" VerticalAlignment="Center"/><PasswordBox x:Name="PasswordBox" Grid.Row="5" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
                     <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Margin="0,12,0,0">
                         <CheckBox x:Name="TlsBox" Content="使用 TLS 加密（巴法云端口 9503）" Checked="TlsBox_Changed" Unchecked="TlsBox_Changed"/>
-                        <TextBlock Text="保存后自动重连。配置优先保存在程序目录；若目录不可写，则保存在用户本地 AppData\MQCtrl。" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                        <TextBlock Text="保存后自动重连。程序目录可写时配置保存在程序目录；否则保存在用户本地 AppData\MQCtrl。" Foreground="{DynamicResource SecondaryText}" TextWrapping="Wrap" Margin="0,12,0,0"/>
                     </StackPanel>
                 </Grid>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
