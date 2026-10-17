@@ -304,19 +304,13 @@ public partial class MainWindow : Window
     {
         if (!_updates.IsInstalled)
         {
-            MessageBox.Show(this, "当前运行版本不是通过 MQCtrl 安装包安装的，无法使用内置更新。", "MQCtrl 更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            await _updates.CheckAndDownloadAsync();
             return;
         }
 
         if (!_updates.HasUpdate)
-            await _updates.CheckAndDownloadAsync();
-
-        if (!_updates.HasUpdate)
         {
-            var message = _updates.Status == "检查失败"
-                ? "暂时无法检查更新，请检查网络后重试。"
-                : "当前已是最新版本。";
-            MessageBox.Show(this, message, "MQCtrl 更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            await _updates.CheckAndDownloadAsync();
             return;
         }
 
@@ -336,6 +330,7 @@ public partial class MainWindow : Window
         "等待更新" => "待更新",
         "正在检查" => "检查中",
         "无法检查更新" => "无法检查",
+        "检查失败" => "无法检查",
         _ => status
     };
 

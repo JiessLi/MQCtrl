@@ -1,6 +1,7 @@
 using Velopack;
 using Velopack.Sources;
 using System.Reflection;
+using System.Net.Http;
 
 namespace MQCtrl.Services;
 
@@ -8,7 +9,7 @@ namespace MQCtrl.Services;
 public sealed class UpdateService
 {
     private readonly UpdateManager _manager = new(
-        new GithubSource("https://github.com/JiessLi/MQCtrl", accessToken: null, prerelease: false));
+        new GithubSource("https://github.com/JiessLi/MQCtrl", accessToken: null, prerelease: false, downloader: new UpdateHttpClientFileDownloader()));
     private readonly object _checkGate = new();
     private Task? _checkTask;
     private VelopackAsset? _pendingRelease;
@@ -81,5 +82,17 @@ public sealed class UpdateService
     {
         Status = status;
         StatusChanged?.Invoke(status);
+    }
+
+    private sealed class UpdateHttpClientFileDownloader : HttpClientFileDownloader
+    {
+        private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
+
+        protected override HttpClient CreateHttpClient(IDictionary<string, string>? headers, double timeout)
+        {
+            var client = base.CreateHttpClient(headers, timeout);
+            client.Timeout = RequestTimeout;
+            return client;
+        }
     }
 }
