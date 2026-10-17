@@ -39,7 +39,7 @@
                     <TextBlock Text="平台" VerticalAlignment="Center"/><ComboBox x:Name="PlatformBox" Grid.Column="1" Height="32" SelectedIndex="0"><ComboBoxItem Content="巴法云"/><ComboBoxItem Content="通用 MQTT（常见兼容平台）"/></ComboBox>
                     <TextBlock Grid.Row="1" Text="服务器地址" VerticalAlignment="Center"/><TextBox x:Name="HostBox" Grid.Row="1" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
                     <TextBlock Grid.Row="2" Text="端口" VerticalAlignment="Center"/><TextBox x:Name="PortBox" Grid.Row="2" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
-                    <TextBlock Grid.Row="3" Text="客户端 ID / 私钥" VerticalAlignment="Center"/><TextBox x:Name="ClientIdBox" Grid.Row="3" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
+                    <TextBlock Grid.Row="3" Text="客户端 ID / 私钥" VerticalAlignment="Center"/><Grid Grid.Row="3" Grid.Column="1" Height="32"><PasswordBox x:Name="ClientIdBox" Padding="8,4,38,4" VerticalContentAlignment="Center"/><Button Content="⧉" FontSize="17" Width="28" Height="26" Margin="0,0,3,0" Padding="0" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderBrush="Transparent" ToolTip="复制密钥" Click="CopyClientId_Click"/></Grid>
                     <TextBlock Grid.Row="4" Text="用户名（可选）" VerticalAlignment="Center"/><TextBox x:Name="UsernameBox" Grid.Row="4" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
                     <TextBlock Grid.Row="5" Text="密码（可选）" VerticalAlignment="Center"/><PasswordBox x:Name="PasswordBox" Grid.Row="5" Grid.Column="1" Height="32" VerticalContentAlignment="Center"/>
                     <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Margin="0,12,0,0">

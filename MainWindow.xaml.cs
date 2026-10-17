@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     private readonly MqttConnectionService _mqtt = new();
     private readonly UpdateService _updates = new();
     private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(12) };
+    private readonly string _logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "logs.jsonl");
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly System.Drawing.Icon _trayIconImage;
     private AppConfig _config;
@@ -35,6 +37,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = this;
+        LoadRecentLogs();
         try { _config = _store.Load(); }
         catch (Exception ex)
         {
@@ -105,15 +108,77 @@ public partial class MainWindow : Window
             return;
         }
         AddLog("执行指令", feature.Name, "info");
+        await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
         var result = await CommandExecutor.ExecuteAsync(feature);
         AddLog(result.StartsWith("执行失败", StringComparison.Ordinal) || result.StartsWith("失败", StringComparison.Ordinal) ? "执行失败" : "执行结果", $"{feature.Name}：{result}", result.StartsWith("执行失败", StringComparison.Ordinal) ? "error" : "success");
     }
 
     private void AddLog(string title, string detail, string kind)
     {
-        Logs.Insert(0, new LogEntry(DateTime.Now.ToString("HH:mm:ss"), title, detail, kind));
+        var timestamp = DateTime.Now.ToString("O");
+        var entry = new LogEntry(DateTime.Now.ToString("HH:mm:ss"), title, detail, kind);
+        Logs.Insert(0, entry);
         while (Logs.Count > 200) Logs.RemoveAt(Logs.Count - 1);
         if (Logs.Count > 0) LogList.ScrollIntoView(Logs[0]);
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_logFilePath)!);
+            using (var stream = new FileStream(_logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.WriteThrough))
+            {
+                using var writer = new StreamWriter(stream);
+                writer.WriteLine(JsonSerializer.Serialize(new PersistedLogEntry(timestamp, title, detail, kind)));
+                writer.Flush();
+                stream.Flush(flushToDisk: true);
+            }
+            TrimLogFileIfNeeded();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            Debug.WriteLine($"无法写入 MQCtrl 日志：{ex.Message}");
+        }
+    }
+
+    private void TrimLogFileIfNeeded()
+    {
+        var file = new FileInfo(_logFilePath);
+        if (file.Length <= 512 * 1024) return;
+
+        var temporaryPath = _logFilePath + ".tmp";
+        try
+        {
+            File.WriteAllLines(temporaryPath, File.ReadLines(_logFilePath).TakeLast(200), new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            File.Move(temporaryPath, _logFilePath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+        }
+    }
+
+    private void LoadRecentLogs()
+    {
+        try
+        {
+            if (!File.Exists(_logFilePath)) return;
+            foreach (var line in File.ReadLines(_logFilePath).TakeLast(200))
+            {
+                try
+                {
+                    var entry = JsonSerializer.Deserialize<PersistedLogEntry>(line);
+                    if (entry is null) continue;
+                    Logs.Add(new LogEntry(DateTime.TryParse(entry.Timestamp, out var time) ? time.ToString("HH:mm:ss") : "--:--:--", entry.Title, entry.Detail, entry.Kind));
+                }
+                catch (JsonException) { }
+            }
+            var chronological = Logs.ToArray();
+            Logs.Clear();
+            foreach (var entry in chronological) Logs.Insert(0, entry);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            Debug.WriteLine($"无法读取 MQCtrl 日志：{ex.Message}");
+        }
     }
 
     private void EditMqtt_Click(object sender, RoutedEventArgs e)
@@ -223,7 +288,15 @@ public partial class MainWindow : Window
         catch (Exception ex) { AddLog("配置保存失败", ex.Message, "error"); MessageBox.Show(this, $"保存配置失败：{ex.Message}", "MQCtrl", MessageBoxButton.OK, MessageBoxImage.Error); }
     }
 
-    private void ClearLog_Click(object sender, RoutedEventArgs e) => Logs.Clear();
+    private void ClearLog_Click(object sender, RoutedEventArgs e)
+    {
+        Logs.Clear();
+        try { File.Delete(_logFilePath); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            AddLog("日志清理失败", ex.Message, "error");
+        }
+    }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
@@ -324,3 +397,5 @@ public sealed class LogEntry
         TitleBrush = kind == "success" ? new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#30E891")) : kind == "error" ? new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#FF5C73")) : new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#21C9F4"));
     }
 }
+
+internal sealed record PersistedLogEntry(string Timestamp, string Title, string Detail, string Kind);

@@ -37,6 +37,10 @@ jobs:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: dotnet publish MQCtrl.csproj -c Release -r win-x64 --self-contained false -p:Version=$env:RELEASE_VERSION -o publish
 
+      - name: Embed application icon
+        shell: pwsh
+        run: ./Tools/SetExecutableIcon.ps1 -ExecutablePath publish/MQCtrl.exe -IconPath Assets/mqctrl.ico
+
       - name: Install Velopack CLI
         run: dotnet tool install --global vpk --version 1.2.161
 
@@ -46,7 +50,7 @@ jobs:
       - name: Package installer
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: vpk pack --packId MQCtrl.APP --packVersion $env:RELEASE_VERSION --packDir publish --mainExe MQCtrl.exe --packTitle MQCtrl --releaseNotes RELEASE_NOTES.md --runtime win-x64 --framework net10.0-x64-desktop --outputDir Releases
+        run: vpk pack --packId MQCtrl.APP --packVersion $env:RELEASE_VERSION --packDir publish --mainExe MQCtrl.exe --packTitle MQCtrl --icon Assets/mqctrl.ico --releaseNotes RELEASE_NOTES.md --runtime win-x64 --framework net10.0-x64-desktop --outputDir Releases
 
       - name: Publish GitHub Release
         env:
