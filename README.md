@@ -59,4 +59,4 @@ MQCtrl 不提供云端中转服务，也不向项目维护者发送遥测、MQTT
 
 ## Code signing policy
 
-当前版本尚未进行代码签名。MQCtrl 计划申请 SignPath Foundation 开源项目签名服务；在申请获批并完成配置前，发布版本仍可能未签名。完整政策见[代码签名政策](CODE_SIGNING_POLICY.md)。
+当前版本尚未进行代码签名，SignPath Foundation 申请尚未提交。申请获批后，计划由 SignPath.io 免费提供代码签名，证书由 SignPath Foundation 提供。SignPath 已确认单人维护者可兼任 Authors/Committers、Reviewers 和 Approvers；每次签名请求仍需人工批准。详见[代码签名政策](CODE_SIGNING_POLICY.md)。
