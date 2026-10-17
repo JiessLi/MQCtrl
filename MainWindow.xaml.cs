@@ -305,7 +305,7 @@ public partial class MainWindow : Window
 
     private void CloseToTray_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void ShowMainWindow()
+    internal void ShowMainWindow()
     {
         Show();
         WindowState = WindowState.Normal;
