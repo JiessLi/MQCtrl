@@ -55,6 +55,24 @@
             <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
             <Setter Property="FontSize" Value="14" />
         </Style>
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="{DynamicResource PanelBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryText}" />
             <Setter Property="Background" Value="{DynamicResource CardBackground}" />
@@ -147,9 +165,9 @@
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
                 <Grid Background="Transparent" SnapsToDevicePixels="True">
                     <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" ViewportSize="{TemplateBinding ViewportSize}">
-                        <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUp" Style="{StaticResource MQCtrlScrollPageButton}"/></Track.DecreaseRepeatButton>
+                        <Track.DecreaseRepeatButton><RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Style="{StaticResource MQCtrlScrollPageButton}"/></Track.DecreaseRepeatButton>
                         <Track.Thumb><Thumb Style="{StaticResource MQCtrlScrollThumb}"/></Track.Thumb>
-                        <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDown" Style="{StaticResource MQCtrlScrollPageButton}"/></Track.IncreaseRepeatButton>
+                        <Track.IncreaseRepeatButton><RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Style="{StaticResource MQCtrlScrollPageButton}"/></Track.IncreaseRepeatButton>
                     </Track>
                 </Grid>
                 <ControlTemplate.Triggers>

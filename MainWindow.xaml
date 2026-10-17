@@ -8,13 +8,13 @@
     <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="64" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="10" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
     <Border Background="{DynamicResource WindowBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6">
     <Grid Margin="0">
-        <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="*"/><RowDefinition Height="74"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="*"/><RowDefinition Height="64"/></Grid.RowDefinitions>
         <Border Grid.Row="0" Margin="-1,-1,-1,0" Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6">
-        <Grid Margin="30,0,10,0">
+        <Grid Margin="24,0,10,0">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="44"/><ColumnDefinition Width="1"/><ColumnDefinition Width="44"/><ColumnDefinition Width="44"/><ColumnDefinition Width="44"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Border Width="42" Height="42" CornerRadius="4" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Margin="0,0,12,0">
-                    <Image Source="{StaticResource MqCtrlLogo}" Stretch="Uniform" Margin="2"/>
+                    <Image Source="{StaticResource MqCtrlLogo}" Stretch="Uniform"/>
                 </Border>
                 <TextBlock Text="MQCtrl" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <Ellipse x:Name="HeaderDot" Width="10" Height="10" Fill="{DynamicResource SecondaryText}" Margin="24,0,8,0" VerticalAlignment="Center"/>
@@ -38,7 +38,7 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding Features}"><ItemsControl.ItemTemplate><DataTemplate>
                         <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8" Margin="2,3" MinHeight="70">
                             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="54"/><ColumnDefinition Width="1.25*"/><ColumnDefinition Width=".9*"/><ColumnDefinition Width="95"/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
-                                <Border Width="48" Height="48" CornerRadius="4" Background="{DynamicResource FieldBackground}" VerticalAlignment="Center"><Image Source="{Binding IconImage}" Stretch="Uniform"/></Border>
+                                <Border Width="42" Height="42" CornerRadius="4" Background="Transparent" VerticalAlignment="Center"><Image Source="{Binding IconImage}" Width="36" Height="36" Stretch="Uniform"/></Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0"><TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold"/><TextBlock Text="{Binding ActionLabel}" Foreground="{DynamicResource SecondaryText}" FontSize="13" Margin="0,3,0,0"/></StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="6,0"><TextBlock Text="匹配值" Foreground="{DynamicResource SecondaryText}" FontSize="12"/><Border Background="{DynamicResource FieldBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,3,0,0"><TextBlock Text="{Binding MatchValue}" FontSize="14"/></Border></StackPanel>
                                 <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center"><ToggleButton IsChecked="{Binding Enabled, Mode=TwoWay}" Width="48" Height="26" Checked="FeatureEnabled_Changed" Unchecked="FeatureEnabled_Changed" Tag="{Binding}"/><TextBlock Text="{Binding EnabledLabel}" Foreground="{DynamicResource SecondaryText}" FontSize="13" HorizontalAlignment="Center" Margin="0,3,0,0"/></StackPanel>
@@ -59,8 +59,10 @@
         </Grid>
 
         <Border Grid.Row="2" Margin="-1,0,-1,-1" Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="30,10">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Grid Width="30" Height="30" Margin="0,0,16,0">
+                <Grid Width="30" Height="30" Margin="-7,0,19,0">
                     <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
                     <Rectangle Fill="{DynamicResource AccentBrush}" Margin="1,1,2,2"/><Rectangle Grid.Column="1" Fill="{DynamicResource AccentBrush}" Margin="2,1,1,2"/>
                     <Rectangle Grid.Row="1" Fill="{DynamicResource AccentBrush}" Margin="1,2,2,1"/><Rectangle Grid.Row="1" Grid.Column="1" Fill="{DynamicResource AccentBrush}" Margin="2,2,1,1"/>
@@ -71,6 +73,8 @@
                 <Border Width="1" Height="25" Background="{DynamicResource BorderBrush}" Margin="22,0"/>
                 <TextBlock Text="随系统启动，持续监听 MQTT 消息" Foreground="{DynamicResource SecondaryText}" FontSize="14" VerticalAlignment="Center"/>
             </StackPanel>
+                <TextBlock Grid.Column="1" x:Name="UpdateStatusText" Text="v-- | 检查中" Foreground="{DynamicResource SecondaryText}" FontSize="13" VerticalAlignment="Center" Cursor="Hand" MouseLeftButtonUp="UpdateStatus_Click" ToolTip="点击检查更新或应用已下载的更新"/>
+            </Grid>
         </Border>
     </Grid>
     </Border>

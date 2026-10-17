@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     private readonly ConfigStore _store = new();
     private readonly MqttConnectionService _mqtt = new();
     private readonly UpdateService _updates = new();
-    private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(12) };
+    private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromMinutes(10) };
     private readonly string _logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MQCtrl", "logs.jsonl");
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly System.Drawing.Icon _trayIconImage;
@@ -71,6 +71,8 @@ public partial class MainWindow : Window
         _mqtt.Log += text => Dispatcher.BeginInvoke(() => AddLog("MQTT", text, "info"));
         _mqtt.MessageReceived += message => Dispatcher.BeginInvoke(async () => await HandleMessageAsync(message));
         _updates.Log += (title, detail) => Dispatcher.BeginInvoke(() => AddLog(title, detail, "muted"));
+        _updates.StatusChanged += status => Dispatcher.BeginInvoke(() =>
+            UpdateStatusText.Text = $"v{_updates.CurrentVersion} | {FormatUpdateStatus(status)}");
         _updateTimer.Tick += async (_, _) => await _updates.CheckAndDownloadAsync();
         _updateTimer.Start();
         Microsoft.Win32.SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
@@ -297,6 +299,45 @@ public partial class MainWindow : Window
             AddLog("日志清理失败", ex.Message, "error");
         }
     }
+
+    private async void UpdateStatus_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!_updates.IsInstalled)
+        {
+            MessageBox.Show(this, "当前运行版本不是通过 MQCtrl 安装包安装的，无法使用内置更新。", "MQCtrl 更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (!_updates.HasUpdate)
+            await _updates.CheckAndDownloadAsync();
+
+        if (!_updates.HasUpdate)
+        {
+            var message = _updates.Status == "检查失败"
+                ? "暂时无法检查更新，请检查网络后重试。"
+                : "当前已是最新版本。";
+            MessageBox.Show(this, message, "MQCtrl 更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var result = MessageBox.Show(this,
+            $"检测到新版本 {_updates.AvailableVersion}，是否立即更新并重新启动 MQCtrl？\n\n选择“否”会在下次启动时自动应用更新。",
+            "MQCtrl 更新", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes) return;
+
+        await _mqtt.DisposeAsync();
+        _trayIcon.Visible = false;
+        _updates.ApplyPendingUpdateAndRestart();
+    }
+
+    private static string FormatUpdateStatus(string status) => status switch
+    {
+        "无需更新" => "最新版",
+        "等待更新" => "待更新",
+        "正在检查" => "检查中",
+        "无法检查更新" => "无法检查",
+        _ => status
+    };
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 

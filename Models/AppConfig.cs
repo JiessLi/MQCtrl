@@ -40,7 +40,7 @@ public sealed class CommandFeature
     public string ScriptPath { get; set; } = "";
     public bool Enabled { get; set; } = true;
     [JsonIgnore] public ImageSource IconImage => ActionIcons.TryGetValue(Action, out var icon) ? icon : ActionIcons["script"];
-    [JsonIgnore] public string ActionLabel => Action switch { "shutdown" => "执行电脑关机", "restart" => "执行电脑重启", "lock" => "锁定 Windows 会话", _ => "运行自定义脚本" };
+    [JsonIgnore] public string ActionLabel => Action switch { "shutdown" => "执行电脑关机", "restart" => "执行电脑重启", "lock" => "进入锁屏状态", _ => "运行自定义脚本" };
     [JsonIgnore] public string EnabledLabel => Enabled ? "已启用" : "已关闭";
 
     private static ImageSource LoadActionIcon(string fileName)
