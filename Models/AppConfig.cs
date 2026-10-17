@@ -25,16 +25,34 @@ public sealed class MqttSettings
 
 public sealed class CommandFeature
 {
+    private static readonly IReadOnlyDictionary<string, ImageSource> ActionIcons = new Dictionary<string, ImageSource>
+    {
+        ["shutdown"] = LoadActionIcon("shutdown.png"),
+        ["restart"] = LoadActionIcon("restart.png"),
+        ["lock"] = LoadActionIcon("lock.png"),
+        ["script"] = LoadActionIcon("script.png")
+    };
+
     public string Name { get; set; } = "新功能";
     public string Topic { get; set; } = "";
     public string MatchValue { get; set; } = "on";
     public string Action { get; set; } = "shutdown";
     public string ScriptPath { get; set; } = "";
     public bool Enabled { get; set; } = true;
-    [JsonIgnore] public string Icon => Action switch { "shutdown" => "⏻", "restart" => "⟳", "lock" => "▣", _ => "›_" };
-    [JsonIgnore] public System.Windows.Media.Brush IconBrush => Action switch { "shutdown" => System.Windows.Media.Brushes.OrangeRed, "restart" => System.Windows.Media.Brushes.DodgerBlue, "lock" => System.Windows.Media.Brushes.SteelBlue, _ => System.Windows.Media.Brushes.MediumPurple };
+    [JsonIgnore] public ImageSource IconImage => ActionIcons.TryGetValue(Action, out var icon) ? icon : ActionIcons["script"];
     [JsonIgnore] public string ActionLabel => Action switch { "shutdown" => "执行电脑关机", "restart" => "执行电脑重启", "lock" => "锁定 Windows 会话", _ => "运行自定义脚本" };
     [JsonIgnore] public string EnabledLabel => Enabled ? "已启用" : "已关闭";
+
+    private static ImageSource LoadActionIcon(string fileName)
+    {
+        var image = new System.Windows.Media.Imaging.BitmapImage();
+        image.BeginInit();
+        image.UriSource = new Uri($"pack://application:,,,/Assets/FeatureIcons/{fileName}", UriKind.Absolute);
+        image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+        image.EndInit();
+        image.Freeze();
+        return image;
+    }
 }
 
 public sealed class ConfigStore
