@@ -1,10 +1,16 @@
 # MQCtrl
 
-**通过 MQTT 消息控制 Windows 电脑。** MQCtrl 在后台监听你指定的主题，收到匹配消息后执行关机、重启、锁屏或自定义脚本。
+想用小爱同学或米家 App 控制 Windows 电脑？MQCtrl 可以把智能家居发出的指令传到电脑：例如说一句话或运行一个米家自动化，让电脑关机、重启、锁屏，或运行你指定的脚本。
+
+简单来说，指令会从米家/小爱同学经过巴法云（MQTT 消息服务）发送到电脑上的 MQCtrl；MQCtrl 收到你预先设置好的主题和匹配内容后，再执行对应操作。MQCtrl 是运行在 Windows 上的接收端，不负责语音识别，也不是米家 App 的替代品；使用前需要先配置好米家/小爱同学与巴法云之间的设备或自动化关联。
 
 [下载 MQCtrl](https://github.com/JiessLi/MQCtrl/releases/latest) · [反馈问题](https://github.com/JiessLi/MQCtrl/issues) · [MIT 许可证](LICENSE)
 
-![MQCtrl 主界面：管理 MQTT 指令并查看实时日志](Assets/mqctrl-main-window.png)
+## 软件界面
+
+主窗口可以查看 MQTT 连接与实时日志、管理电脑控制指令，并设置是否随 Windows 启动。
+
+![MQCtrl 主界面：管理电脑控制指令并查看实时日志](Assets/mqctrl-main-window.png)
 
 ## 主要功能
 
@@ -23,9 +29,11 @@
 ## 快速开始
 
 1. 启动 MQCtrl，点击标题栏右侧的齿轮按钮打开 MQTT 设置。
-2. 选择“巴法云”或“通用 MQTT”，填写平台提供的连接信息并保存。
-3. 在 MQTT 平台创建主题，在 MQCtrl 中为相应指令填写相同主题、匹配值和动作，然后启用指令。
-4. 向该主题发布匹配值。例如，主题为 `pc/lock`、匹配值为 `on` 时，发布 `on` 会锁定当前 Windows 会话。
+2. 选择“巴法云”或“通用 MQTT”，填写对应平台提供的服务器和客户端信息并保存。使用巴法云时，按巴法云提供的说明创建并关联智能设备。
+3. 在 MQCtrl 中找到要使用的指令，填写与 MQTT 平台一致的主题和匹配值，然后启用该指令。
+4. 让米家 App、小爱同学或其他 MQTT 发布端向该主题发送匹配值。例如，主题为 `pc/lock`、匹配值为 `on` 时，收到 `on` 就会让电脑进入锁屏状态。
+
+如果只想先确认电脑端是否正常，可以暂时不连接米家：在 MQTT 平台向已配置的主题发送匹配值，观察 MQCtrl 的实时日志是否显示收到消息并执行操作。
 
 巴法云常用连接参数：`bemfa.com:9501`（TCP）或 `bemfa.com:9503`（TLS）。主题须完全匹配；消息内容会忽略首尾空格及大小写差异。MQCtrl 只订阅已启用指令使用的主题。
 
@@ -59,4 +67,4 @@ MQCtrl 不提供云端中转服务，也不向项目维护者发送遥测、MQTT
 
 ## Code signing policy
 
-当前版本尚未进行代码签名，SignPath Foundation 申请尚未提交。申请获批后，计划由 SignPath.io 免费提供代码签名，证书由 SignPath Foundation 提供。SignPath 已确认单人维护者可兼任 Authors/Committers、Reviewers 和 Approvers；每次签名请求仍需人工批准。详见[代码签名政策](CODE_SIGNING_POLICY.md)。
+当前版本尚未进行代码签名，Windows 可能显示 SmartScreen 安全提示。请仅从本项目的 [GitHub Releases](https://github.com/JiessLi/MQCtrl/releases/latest) 下载。详见[代码签名政策](CODE_SIGNING_POLICY.md)。
