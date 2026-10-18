@@ -32,17 +32,24 @@ public partial class MainWindow : Window
 
     public ObservableCollection<CommandFeature> Features { get; } = [];
     public ObservableCollection<LogEntry> Logs { get; } = [];
+    public ObservableCollection<object> LogItems { get; } = [];
 
     public MainWindow()
     {
         InitializeComponent();
         DataContext = this;
         LoadRecentLogs();
-        try { _config = _store.Load(); }
+        AddLog("MQCtrl", "程序已启动", "info");
+        try
+        {
+            _config = _store.Load();
+            AddLog("MQCtrl", $"配置文件：{_store.Path}", "info");
+        }
         catch (Exception ex)
         {
             MessageBox.Show($"无法读取配置文件：\n{ex.Message}\n\n将使用空配置启动。", "MQCtrl", MessageBoxButton.OK, MessageBoxImage.Error);
             _config = new AppConfig();
+            AddLog("配置读取失败", ex.Message, "error");
         }
 
         foreach (var feature in _config.Features) Features.Add(feature);
@@ -80,7 +87,6 @@ public partial class MainWindow : Window
         _initialized = true;
         RefreshMqtt();
         _ = _updates.CheckAndDownloadAsync();
-        AddLog("MQCtrl", $"配置文件：{_store.Path}", "info");
         if (string.IsNullOrWhiteSpace(_config.Mqtt.ClientId))
             AddLog("需要配置 MQTT", "点击右上角齿轮填写巴法云客户端 ID（用户私钥）", "muted");
         if (Features.All(x => !x.Enabled))
@@ -117,11 +123,13 @@ public partial class MainWindow : Window
 
     private void AddLog(string title, string detail, string kind)
     {
-        var timestamp = DateTime.Now.ToString("O");
-        var entry = new LogEntry(DateTime.Now.ToString("HH:mm:ss"), title, detail, kind);
+        var now = DateTime.Now;
+        var timestamp = now.ToString("O");
+        var entry = new LogEntry(now, title, detail, kind);
         Logs.Insert(0, entry);
         while (Logs.Count > 200) Logs.RemoveAt(Logs.Count - 1);
-        if (Logs.Count > 0) LogList.ScrollIntoView(Logs[0]);
+        RefreshLogItems();
+        if (LogItems.Count > 0) LogList.ScrollIntoView(LogItems[0]);
 
         try
         {
@@ -169,17 +177,34 @@ public partial class MainWindow : Window
                 {
                     var entry = JsonSerializer.Deserialize<PersistedLogEntry>(line);
                     if (entry is null) continue;
-                    Logs.Add(new LogEntry(DateTime.TryParse(entry.Timestamp, out var time) ? time.ToString("HH:mm:ss") : "--:--:--", entry.Title, entry.Detail, entry.Kind));
+                    var timestamp = DateTime.TryParse(entry.Timestamp, out var time) ? time : DateTime.MinValue;
+                    Logs.Add(new LogEntry(timestamp, entry.Title, entry.Detail, entry.Kind));
                 }
                 catch (JsonException) { }
             }
             var chronological = Logs.ToArray();
             Logs.Clear();
             foreach (var entry in chronological) Logs.Insert(0, entry);
+            RefreshLogItems();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             Debug.WriteLine($"无法读取 MQCtrl 日志：{ex.Message}");
+        }
+    }
+
+    private void RefreshLogItems()
+    {
+        LogItems.Clear();
+        DateTime? previousDate = null;
+        foreach (var entry in Logs)
+        {
+            if (previousDate != entry.Timestamp.Date)
+            {
+                LogItems.Add(new LogDateHeader(entry.DateLabel));
+                previousDate = entry.Timestamp.Date;
+            }
+            LogItems.Add(entry);
         }
     }
 
@@ -293,6 +318,7 @@ public partial class MainWindow : Window
     private void ClearLog_Click(object sender, RoutedEventArgs e)
     {
         Logs.Clear();
+        LogItems.Clear();
         try { File.Delete(_logFilePath); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
@@ -418,16 +444,20 @@ public partial class MainWindow : Window
     }
 }
 
+public sealed record LogDateHeader(string DateLabel);
+
 public sealed class LogEntry
 {
-    public string Time { get; }
+    public DateTime Timestamp { get; }
+    public string DateLabel => Timestamp == DateTime.MinValue ? "日期未知" : Timestamp.ToString("yyyy年M月d日");
+    public string Time => Timestamp == DateTime.MinValue ? "--:--:--" : Timestamp.ToString("HH:mm:ss");
     public string Title { get; }
     public string Detail { get; }
     public MediaBrush DotBrush { get; }
     public MediaBrush TitleBrush { get; }
-    public LogEntry(string time, string title, string detail, string kind)
+    public LogEntry(DateTime timestamp, string title, string detail, string kind)
     {
-        Time = time; Title = title; Detail = detail;
+        Timestamp = timestamp; Title = title; Detail = detail;
         var color = kind switch { "success" => "#30E891", "error" => "#FF5C73", "muted" => "#8393A7", _ => "#21C9F4" };
         DotBrush = new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString(color));
         TitleBrush = kind == "success" ? new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#30E891")) : kind == "error" ? new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#FF5C73")) : new SolidColorBrush((MediaColor)System.Windows.Media.ColorConverter.ConvertFromString("#21C9F4"));

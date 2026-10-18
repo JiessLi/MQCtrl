@@ -1,3 +1,19 @@
+# MQCtrl 1.0.4
+
+- 实时日志按日期分组，日期作为独立分隔行显示。
+- 日志时间固定右对齐；正文换行时可使用整行宽度。
+- 增加程序启动与配置加载日志，并区分 MQTT 初次连接和重连。
+
+**签名说明：**此版本暂未进行代码签名，Windows 可能显示 SmartScreen 提示。请仅从本项目的 GitHub Releases 下载。
+
+## Code signing policy
+
+当前版本未签名。[查看完整代码签名政策](https://github.com/JiessLi/MQCtrl/blob/main/CODE_SIGNING_POLICY.md)。
+
+## Privacy
+
+[查看 MQCtrl 隐私说明](https://github.com/JiessLi/MQCtrl/blob/main/PRIVACY.md)。
+
 # MQCtrl 1.0.3
 
 - 更新检查完成后不再弹出“已是最新版本”或失败提示，结果仅显示在主窗口右下角版本状态中。

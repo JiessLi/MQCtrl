@@ -14,6 +14,7 @@ public sealed class MqttConnectionService : IAsyncDisposable
     private IMqttClient? _client;
     private CancellationTokenSource? _cts;
     private Task? _loop;
+    private bool _hasConnected;
     private readonly object _gate = new();
 
     public event Action<string>? StatusChanged;
@@ -89,7 +90,7 @@ public sealed class MqttConnectionService : IAsyncDisposable
             {
                 try
                 {
-                    StatusChanged?.Invoke(attempt == 0 ? "连接中" : "重连中");
+                    StatusChanged?.Invoke(_hasConnected || attempt > 0 ? "重连中" : "连接中");
                     var options = new MqttClientOptionsBuilder()
                         .WithClientId(settings.ClientId.Trim())
                         .WithTcpServer(settings.Host.Trim(), settings.Port)
@@ -102,10 +103,16 @@ public sealed class MqttConnectionService : IAsyncDisposable
                     await client.ConnectAsync(options.Build(), token);
                     attempt = 0;
                     StatusChanged?.Invoke("在线");
-                    Log?.Invoke($"MQTT 已连接：{settings.Host}:{settings.Port}");
+                    var reconnecting = _hasConnected;
+                    Log?.Invoke(reconnecting
+                        ? $"MQTT 重新连接：{settings.Host}:{settings.Port}"
+                        : $"MQTT 已连接：{settings.Host}:{settings.Port}");
                     foreach (var topic in topics)
                         await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build(), token);
-                    Log?.Invoke($"已订阅 {topics.Length} 个主题");
+                    Log?.Invoke(reconnecting
+                        ? $"重新连接后已重新订阅 {topics.Length} 个主题"
+                        : $"已订阅 {topics.Length} 个主题");
+                    _hasConnected = true;
 
                     while (client.IsConnected && !token.IsCancellationRequested)
                         await Task.Delay(1000, token);
